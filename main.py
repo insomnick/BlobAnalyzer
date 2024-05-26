@@ -35,7 +35,18 @@ def main():
     pink_mask_after = create_pink_mask(img_after)
 
     # 4. detect (pink) circle
+    circle_mask_before = detect_and_mask_circle(pink_mask_before)
+    circle_mask_after = detect_and_mask_circle(pink_mask_after)
+
     # 5. bitmask (only detect inside masked region)
+    petri_dish_before = cv2.bitwise_and(img_before, img_before, mask=circle_mask_before)
+    petri_dish_after = cv2.bitwise_and(img_after, img_after, mask=circle_mask_after)
+
+    debug_imshow('test before', petri_dish_before)
+    debug_imshow('test after', petri_dish_after)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     # 6. detect yellow
     # 7. calculate (bit) area
     # 8. calculate aruco area for comparison (from bullet point 2)
@@ -102,6 +113,33 @@ def finetune_mask(windowname, hsv_img, lower, upper):
         if k == 104:  # d
             upper = upper + [0, 0, -1]
             print('upper: v++')
+
+    return mask
+
+
+def detect_and_mask_circle(img):
+    # Convert to grayscale.
+    gray = img
+
+    # Blur using 3 * 3 kernel.
+    gray_blurred = cv2.blur(gray, (3, 3))
+
+    # Apply Hough transform on the blurred image.
+    detected_circles = cv2.HoughCircles(gray_blurred,
+                                        cv2.HOUGH_GRADIENT, 1, 20, param1=50,
+                                        param2=30, minRadius=80, maxRadius=4000)
+
+    mask = np.zeros_like(img)
+    # Draw circles that are detected.
+    if detected_circles is not None:
+
+        # Convert the circle parameters a, b and r to integers.
+        detected_circles = np.uint16(np.around(detected_circles))
+
+        pt = detected_circles[0, 0]
+        a, b, r = pt[0], pt[1], pt[2]
+        # Draw the circumference of the circle.
+        cv2.circle(mask, (a, b), r, (255, 255, 255), -1)
 
     return mask
 
