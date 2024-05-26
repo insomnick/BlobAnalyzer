@@ -10,12 +10,9 @@ The primary objective of BlobAnalyzer is to streamline the analysis of *Physarum
 - Calculate and compare the growth of the blob before and after the experiment.
 - Output results into a CSV file, including measurements and inaccuracies.
 
-## 3. Features
-- **Automated Image Alignment:** Utilizes ArUco markers to align images taken before and after the experiment, ensuring consistent size comparison.
-- **Focused Area Analysis:** Analyzes the yellow growth specifically within a pink circle for clear data input.
-- **Growth Calculation:** Keys out the yellow blob to calculate its size accurately.
-- **Comparison and Reporting:** Compares the blob size before and after the experiment, repeated n times per experiment.
-- **CSV Output:** Generates a CSV file with detailed results, including measurement inaccuracies in both percentage and absolute values.
+## 3. Feature Pipeline
+load image -> correct perspective -> pink_mask + circle detection
+->  
 
 ## 4. Technology Stack
 - **Programming Languages:** Python
