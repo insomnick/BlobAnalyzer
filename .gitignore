@@ -301,3 +301,6 @@ pyrightconfig.json
 
 data/
 data/*
+
+.idea/
+.idea/*
