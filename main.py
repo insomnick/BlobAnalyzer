@@ -6,8 +6,6 @@ import os
 
 
 def main():
-    # What to do
-
     # 1. Read in image
     data_folder = 'data'
     experiment_folders = os.listdir(data_folder)  # Get Experiment Names
@@ -53,13 +51,22 @@ def main():
     after_pixel_area = cv2.countNonZero(blob_mask_after)
 
     # 8. calculate aruco area for comparison (from bullet point 2)
-    # thank u kind stranger
-    # https://stackoverflow.com/questions/64394768/how-calculate-the-area-of-irregular-object-in-an-image-opencv
+    # https://docs.opencv.org/4.x/d5/dae/tutorial_aruco_detection.html
+    # Aruco detect, Marker is 2.70 cm x 2.70 cm
+    ratio_before = calculate_pixel_to_cm_ratio(img_before, 2.7)
+    ratio_after = calculate_pixel_to_cm_ratio(img_before, 2.7)
 
     # 9. Do math and calculate to scale
+    # Todo
+    # calculate_area_cm2(before_pixel_area, ratio_before
+    # thank u kind stranger
+    # https://stackoverflow.com/questions/64394768/how-calculate-the-area-of-irregular-object-in-an-image-opencv
     # 10. Safe results in cv
+    # Todo
     # 11. Do for every image pair
-    # 12. Success
+    # Todo
+    # 12. Success - hopefully
+    # Todo
     return
 
 
@@ -82,6 +89,7 @@ def finetune_mask(windowname, hsv_img, original_image, lower, upper):
             print('ready')
             cv2.destroyAllWindows()
             break
+
         if k == 113:  # w
             lower = lower + [1, 0, 0]
             print('lower: h++')
@@ -156,6 +164,24 @@ def create_yellow_mask(img):
     upper_yellow = np.array([30, 255, 255])  # Adjust these values based on the image
 
     return finetune_mask('yellow for blob detection', hsv, img, lower_yellow, upper_yellow)
+
+def calculate_pixel_to_cm_ratio(img, aruco_side_length):
+
+    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
+    parameters = cv2.aruco.DetectorParameters()
+    detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
+    markerCorners, markerIds, rejectedImgPoints = detector.detectMarkers(img)
+    cv2.aruco.drawDetectedMarkers(img, markerCorners, markerIds)
+
+    aruco_perimeter_sum = 0
+    for c in markerCorners:
+        aruco_perimeter = cv2.arcLength(markerCorners[0], True) #First 1, then all 4
+        aruco_perimeter_sum += aruco_perimeter
+
+    mean_aruco_perimeter = aruco_perimeter_sum / len(markerCorners)
+    pixel_cm_ratio = mean_aruco_perimeter / (aruco_side_length * 4)
+
+    return pixel_cm_ratio
 
 def debug_imshow(window_name, img):
     #For debugging
