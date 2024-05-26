@@ -28,6 +28,8 @@ def main():
     img_after = cv2.imread(os.path.join(input_folder, 'after.jpg'))
 
     # 2. perspective removal, correction
+    # Thanks for this tutorial kind stranger
+    # https://answers.opencv.org/question/136796/turning-aruco-marker-in-parallel-with-camera-plane/
     # ToDo postponed
 
     # 3. pink mask
@@ -42,14 +44,18 @@ def main():
     petri_dish_before = cv2.bitwise_and(img_before, img_before, mask=circle_mask_before)
     petri_dish_after = cv2.bitwise_and(img_after, img_after, mask=circle_mask_after)
 
-    debug_imshow('test before', petri_dish_before)
-    debug_imshow('test after', petri_dish_after)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
     # 6. detect yellow
+    blob_mask_before = create_yellow_mask(petri_dish_before)
+    blob_mask_after = create_yellow_mask(petri_dish_after)
+
     # 7. calculate (bit) area
+    before_pixel_area = cv2.countNonZero(blob_mask_before)
+    after_pixel_area = cv2.countNonZero(blob_mask_after)
+
     # 8. calculate aruco area for comparison (from bullet point 2)
+    # thank u kind stranger
+    # https://stackoverflow.com/questions/64394768/how-calculate-the-area-of-irregular-object-in-an-image-opencv
+
     # 9. Do math and calculate to scale
     # 10. Safe results in cv
     # 11. Do for every image pair
@@ -62,13 +68,14 @@ def create_pink_mask(img):
     lower_pink = np.array([140, 50, 50])  # Default
     upper_pink = np.array([170, 255, 255])  # Default
 
-    return finetune_mask('pink  for circle detection', hsv, lower_pink, upper_pink)
+    return finetune_mask('pink for circle detection', hsv, img, lower_pink, upper_pink)
 
 
-def finetune_mask(windowname, hsv_img, lower, upper):
+def finetune_mask(windowname, hsv_img, original_image, lower, upper):
     while 1:
         mask = cv2.inRange(hsv_img, lower, upper)
-        debug_imshow(windowname, mask)
+        debug_imshow(windowname, cv2.bitwise_and(original_image, original_image, mask=mask))
+        debug_imshow('original', original_image)
         k = cv2.waitKey(0)
         print(k)
         if k == 27:
@@ -143,6 +150,12 @@ def detect_and_mask_circle(img):
 
     return mask
 
+def create_yellow_mask(img):
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    lower_yellow = np.array([20, 100, 100])  # Adjust these values based on the image
+    upper_yellow = np.array([30, 255, 255])  # Adjust these values based on the image
+
+    return finetune_mask('yellow for blob detection', hsv, img, lower_yellow, upper_yellow)
 
 def debug_imshow(window_name, img):
     #For debugging
