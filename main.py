@@ -7,18 +7,18 @@ import pandas as pd
 
 def main():
     data_folder = 'data'
-    experiment_folders = os.listdir(data_folder)  # Get Experiment Names
+    group_count = 7
+    experiment_count = 4
 
-    for group_id in range(1, 7):
+    for group_id in range(1, group_count + 1):
         input_folder = os.path.join(data_folder, f'Gruppe{group_id}')
-        result = analyse_image_pair(input_folder, 4)
         group_results = {}
-        '''
-        for experiment_id in range(1, 4):
+        
+        for experiment_id in range(1, experiment_count + 1):
             result = analyse_image_pair(input_folder, experiment_id)
             group_results[experiment_id] = result
         # Hier analyse von Gruppe anwenden
-        '''
+
     return
 
 
