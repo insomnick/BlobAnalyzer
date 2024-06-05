@@ -6,28 +6,35 @@ import pandas as pd
 
 
 def main():
-    analyse_image_pair()
+    data_folder = 'data'
+    experiment_folders = os.listdir(data_folder)  # Get Experiment Names
+
+    for group_id in range(1, 7):
+        input_folder = os.path.join(data_folder, f'Gruppe{group_id}')
+        result = analyse_image_pair(input_folder, 4)
+        group_results = {}
+        '''
+        for experiment_id in range(1, 4):
+            result = analyse_image_pair(input_folder, experiment_id)
+            group_results[experiment_id] = result
+        # Hier analyse von Gruppe anwenden
+        '''
     return
 
 
-def analyse_image_pair():
-    experiment_id = 0
+def analyse_image_pair(input_folder, experiment_id):
     # 1. Read in image
-    data_folder = 'data'
-    experiment_folders = os.listdir(data_folder)  # Get Experiment Names
-    number_files = len(experiment_folders)  # Get number of experiments
 
     results_folder = 'results'
-    output_folder = os.path.join(results_folder, '1')
+    output_folder = os.path.join(results_folder, input_folder.split('/')[-1])
     os.makedirs(output_folder, exist_ok=True)
 
     # From now on every temp file can be stored the fitting result folder for better analyzes
 
     # Load images
     # ToDo: Multiple images. For now just the Test images in data/1
-    input_folder = os.path.join(data_folder, '1')
-    img_before = cv2.imread(os.path.join(input_folder, 'before.jpg'))
-    img_after = cv2.imread(os.path.join(input_folder, 'after.jpg'))
+    img_before = cv2.imread(os.path.join(input_folder, f'before{experiment_id}.jpg'))
+    img_after = cv2.imread(os.path.join(input_folder, f'after{experiment_id}.jpg'))
 
     # 2. perspective removal, correction
     # Thanks for this tutorial kind stranger
