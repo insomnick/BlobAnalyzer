@@ -1,0 +1,7 @@
+1,Licht
+2,Dunkel
+3,Lila
+4,Blau
+5,Gruen
+6,Gelb
+7,Rot

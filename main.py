@@ -1,29 +1,40 @@
 import math
 import cv2
 import numpy as np
-import pandas as pd
 import os
+import pandas as pd
 
 
 def main():
-    # 1. Read in image
     data_folder = 'data'
-    experiment_folders = os.listdir(data_folder)  # Get Experiment Names
-    number_files = len(experiment_folders)  # Get number of experiments
+    group_count = 7
+    experiment_count = 4
+
+    for group_id in range(1, group_count + 1):
+        input_folder = os.path.join(data_folder, f'Gruppe{group_id}')
+        group_results = {}
+        
+        for experiment_id in range(1, experiment_count + 1):
+            result = analyse_image_pair(input_folder, experiment_id)
+            group_results[experiment_id] = result
+        # Hier analyse von Gruppe anwenden
+
+    return
+
+
+def analyse_image_pair(input_folder, experiment_id):
+    # 1. Read in image
 
     results_folder = 'results'
-    for folder in experiment_folders:
-        # Versuchsdurchlauf 1 bc of science yeah
-        output_folder = os.path.join(results_folder, folder, 'Versuchsdurchlauf 1')
-        os.makedirs(output_folder, exist_ok=True)
+    output_folder = os.path.join(results_folder, input_folder.split('/')[-1])
+    os.makedirs(output_folder, exist_ok=True)
 
     # From now on every temp file can be stored the fitting result folder for better analyzes
 
     # Load images
     # ToDo: Multiple images. For now just the Test images in data/1
-    input_folder = os.path.join(data_folder, '1')
-    img_before = cv2.imread(os.path.join(input_folder, 'before.jpg'))
-    img_after = cv2.imread(os.path.join(input_folder, 'after.jpg'))
+    img_before = cv2.imread(os.path.join(input_folder, f'before{experiment_id}.jpg'))
+    img_after = cv2.imread(os.path.join(input_folder, f'after{experiment_id}.jpg'))
 
     # 2. perspective removal, correction
     # Thanks for this tutorial kind stranger
@@ -57,23 +68,40 @@ def main():
     ratio_after = calculate_pixel_to_cm_ratio(img_before, 2.7)
 
     # 9. Do math and calculate to scale
-    # Todo
-    # calculate_area_cm2(before_pixel_area, ratio_before
+    before_cm2_area = before_pixel_area / ratio_before ** 2
+    print(f'{before_cm2_area} cm^2 before')
+    after_cm2_area = after_pixel_area / ratio_after ** 2
+    print(f'{after_cm2_area} cm^2 after')
     # thank u kind stranger
     # https://stackoverflow.com/questions/64394768/how-calculate-the-area-of-irregular-object-in-an-image-opencv
+
     # 10. Safe results in cv
-    # Todo
-    # 11. Do for every image pair
-    # Todo
+    # Calculate areas
+    area_before = before_cm2_area
+    area_after = after_cm2_area
+    growth = area_after - area_before
+    growth_percentage = (growth / area_before) * 100 if area_before != 0 else float('inf')
+
+    # Save results to CSV
+    results = {
+        'Experiment ID': [experiment_id],
+        'Area Before': [area_before],
+        'Area After': [area_after],
+        'Growth': [growth],
+        'Growth Percentage': [growth_percentage],
+    }
+
+    df = pd.DataFrame(results)
+    df.to_csv(os.path.join(output_folder, f'result{experiment_id}.csv'), index=False)  # 11. Do for every image pair
     # 12. Success - hopefully
-    # Todo
-    return
+    # Todo be successful
+    return df
 
 
 def create_pink_mask(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower_pink = np.array([140, 50, 50])  # Default
-    upper_pink = np.array([170, 255, 255])  # Default
+    upper_pink = np.array([190, 255, 255])  # Default
 
     return finetune_mask('pink for circle detection', hsv, img, lower_pink, upper_pink)
 
@@ -147,7 +175,6 @@ def detect_and_mask_circle(img):
     mask = np.zeros_like(img)
     # Draw circles that are detected.
     if detected_circles is not None:
-
         # Convert the circle parameters a, b and r to integers.
         detected_circles = np.uint16(np.around(detected_circles))
 
@@ -158,6 +185,7 @@ def detect_and_mask_circle(img):
 
     return mask
 
+
 def create_yellow_mask(img):
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     lower_yellow = np.array([20, 100, 100])  # Adjust these values based on the image
@@ -165,8 +193,8 @@ def create_yellow_mask(img):
 
     return finetune_mask('yellow for blob detection', hsv, img, lower_yellow, upper_yellow)
 
-def calculate_pixel_to_cm_ratio(img, aruco_side_length):
 
+def calculate_pixel_to_cm_ratio(img, aruco_side_length):
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
     parameters = cv2.aruco.DetectorParameters()
     detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
@@ -175,7 +203,7 @@ def calculate_pixel_to_cm_ratio(img, aruco_side_length):
 
     aruco_perimeter_sum = 0
     for c in markerCorners:
-        aruco_perimeter = cv2.arcLength(markerCorners[0], True) #First 1, then all 4
+        aruco_perimeter = cv2.arcLength(markerCorners[0], True)  # First 1, then all 4
         aruco_perimeter_sum += aruco_perimeter
 
     mean_aruco_perimeter = aruco_perimeter_sum / len(markerCorners)
@@ -183,8 +211,9 @@ def calculate_pixel_to_cm_ratio(img, aruco_side_length):
 
     return pixel_cm_ratio
 
+
 def debug_imshow(window_name, img):
-    #For debugging
+    # For debugging
     ratio = 0.2
     size = (math.floor(3000 * ratio), math.floor(4000 * ratio))
     cv2.imshow('debug: ' + window_name, cv2.resize(img, size))
