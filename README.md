@@ -12,7 +12,7 @@ The primary objective of BlobAnalyzer is to streamline the analysis of *Physarum
 
 ## 3. Feature Pipeline
 load image -> correct perspective -> pink_mask + circle detection
-->  
+->  detect blob (yellow) -> ratio from AruUco markers -> data -> success
 
 ## 4. Technology Stack
 - **Programming Languages:** Python
